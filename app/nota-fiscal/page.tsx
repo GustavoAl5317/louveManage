@@ -42,7 +42,7 @@ const MARGEM_PADRAO = 80;
 
 export default function NotaFiscalPage() {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [previews, setPreviews] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [info, setInfo] = useState<{
@@ -53,15 +53,16 @@ export default function NotaFiscalPage() {
   const [produtos, setProdutos] = useState<ProdutoExtraido[]>([]);
   const [salvando, setSalvando] = useState(false);
 
-  const handleFile = async (file: File) => {
+  const handleFiles = async (files: File[]) => {
+    if (!files.length) return;
     setErro(null);
     setProdutos([]);
     setInfo(null);
-    setPreview(URL.createObjectURL(file));
+    setPreviews(files.map((f) => URL.createObjectURL(f)));
     setLoading(true);
     try {
       const fd = new FormData();
-      fd.append("file", file);
+      files.forEach((f) => fd.append("file", f));
       const r = await fetch("/api/nota-fiscal", { method: "POST", body: fd });
       const data = await r.json();
       if (!r.ok) {
@@ -74,8 +75,13 @@ export default function NotaFiscalPage() {
         numero: ia.numero,
         data: ia.data,
       });
-      setProdutos(
-        (ia.produtos ?? []).map((p) => ({
+      const seen = new Set<string>();
+      const lista: ProdutoExtraido[] = [];
+      for (const p of ia.produtos ?? []) {
+        const key = (p.sku ?? p.nome ?? "").trim().toLowerCase();
+        if (key && seen.has(key)) continue;
+        if (key) seen.add(key);
+        lista.push({
           nome: p.nome ?? "",
           sku: p.sku ?? null,
           quantidade: Number(p.quantidade ?? 1),
@@ -85,8 +91,9 @@ export default function NotaFiscalPage() {
           preco_venda: calcPrecoVenda(Number(p.custo_unit ?? 0), MARGEM_PADRAO),
           estoque_minimo: 0,
           importar: true,
-        }))
-      );
+        });
+      }
+      setProdutos(lista);
     } catch (e: any) {
       setErro(e.message ?? "Falha");
     } finally {
@@ -150,7 +157,7 @@ export default function NotaFiscalPage() {
       }
       alert(`${sel.length} produto(s) importado(s) para o estoque.`);
       setProdutos([]);
-      setPreview(null);
+      setPreviews([]);
       setInfo(null);
     } finally {
       setSalvando(false);
@@ -170,12 +177,17 @@ export default function NotaFiscalPage() {
             className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center cursor-pointer hover:border-brand-500 hover:bg-brand-50 transition"
             onClick={() => inputRef.current?.click()}
           >
-            {preview ? (
-              <img
-                src={preview}
-                alt="nota"
-                className="max-h-80 mx-auto rounded-lg"
-              />
+            {previews.length ? (
+              <div className="grid grid-cols-2 gap-2">
+                {previews.map((src, i) => (
+                  <img
+                    key={i}
+                    src={src}
+                    alt={`nota ${i + 1}`}
+                    className="max-h-60 rounded-lg object-contain w-full bg-slate-50"
+                  />
+                ))}
+              </div>
             ) : (
               <div className="py-10">
                 <ScanLine
@@ -184,7 +196,7 @@ export default function NotaFiscalPage() {
                 />
                 <div className="font-semibold">Tire foto ou envie a nota</div>
                 <div className="text-xs text-slate-500 mt-1">
-                  JPG, PNG ou HEIC
+                  JPG, PNG ou HEIC · pode enviar várias fotos da mesma nota
                 </div>
               </div>
             )}
@@ -193,10 +205,11 @@ export default function NotaFiscalPage() {
               type="file"
               accept="image/*"
               capture="environment"
+              multiple
               className="hidden"
               onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) handleFile(f);
+                const fs = Array.from(e.target.files ?? []);
+                if (fs.length) handleFiles(fs);
               }}
             />
           </div>
