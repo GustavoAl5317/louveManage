@@ -1,7 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, Search, AlertTriangle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Search,
+  AlertTriangle,
+  Download,
+  Upload,
+} from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { brl, calcPrecoVenda, pct } from "@/lib/format";
 
@@ -32,6 +40,40 @@ export default function EstoquePage() {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [busca, setBusca] = useState("");
   const [editando, setEditando] = useState<any | null>(null);
+  const [importando, setImportando] = useState(false);
+  const importRef = useRef<HTMLInputElement>(null);
+
+  const exportar = () => {
+    window.location.href = "/api/produtos/export";
+  };
+
+  const importar = async (file: File) => {
+    setImportando(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const r = await fetch("/api/produtos/import", { method: "POST", body: fd });
+      const data = await r.json();
+      if (!r.ok) {
+        alert(data.error ?? "Erro ao importar");
+        return;
+      }
+      const erros = data.erros?.length
+        ? `\n\n${data.erros.length} linha(s) com erro:\n` +
+          data.erros
+            .slice(0, 5)
+            .map((e: any) => `· linha ${e.linha}: ${e.motivo}`)
+            .join("\n")
+        : "";
+      alert(
+        `Importação concluída:\n· ${data.inserted} novo(s)\n· ${data.updated} atualizado(s)${erros}`
+      );
+      carregar();
+    } finally {
+      setImportando(false);
+      if (importRef.current) importRef.current.value = "";
+    }
+  };
 
   const carregar = async () => {
     const r = await fetch("/api/produtos");
@@ -86,13 +128,45 @@ export default function EstoquePage() {
         title="Estoque"
         subtitle="Gerencie seus produtos, custos e margens"
         right={
-          <button
-            className="btn-primary"
-            onClick={() => setEditando({ ...empty })}
-          >
-            <Plus size={16} />
-            Novo produto
-          </button>
+          <>
+            <button
+              className="btn-ghost"
+              onClick={exportar}
+              title="Baixar planilha CSV"
+            >
+              <Download size={16} />
+              <span className="hidden sm:inline">Exportar</span>
+            </button>
+            <button
+              className="btn-ghost"
+              onClick={() => importRef.current?.click()}
+              disabled={importando}
+              title="Importar planilha CSV"
+            >
+              <Upload size={16} />
+              <span className="hidden sm:inline">
+                {importando ? "Importando..." : "Importar"}
+              </span>
+            </button>
+            <input
+              ref={importRef}
+              type="file"
+              accept=".csv,text/csv"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) importar(f);
+              }}
+            />
+            <button
+              className="btn-primary"
+              onClick={() => setEditando({ ...empty })}
+            >
+              <Plus size={16} />
+              <span className="hidden sm:inline">Novo produto</span>
+              <span className="sm:hidden">Novo</span>
+            </button>
+          </>
         }
       />
 
@@ -108,6 +182,13 @@ export default function EstoquePage() {
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
           />
+        </div>
+        <div className="text-[11px] text-slate-400 mt-2">
+          Planilha CSV com colunas:{" "}
+          <code className="bg-slate-100 px-1 rounded">
+            nome, sku, categoria, custo, margem, preco_venda, estoque, estoque_minimo
+          </code>
+          . Atualiza pelo SKU (ou nome) se já existir.
         </div>
       </div>
 
