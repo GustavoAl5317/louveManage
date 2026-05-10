@@ -22,6 +22,7 @@ export async function POST(req: NextRequest) {
   await ensureSchema();
   const body = await req.json();
   const itens: ItemInput[] = body.itens ?? [];
+  const cliente: string | null = body.cliente ? String(body.cliente).trim() || null : null;
   if (!itens.length) return NextResponse.json({ error: "Sem itens" }, { status: 400 });
 
   try {
@@ -46,7 +47,9 @@ export async function POST(req: NextRequest) {
     }
 
     const { rows: vRows } = await sql<Venda>`
-      INSERT INTO vendas (total, custo_total) VALUES (${total}, ${custoTotal}) RETURNING *`;
+      INSERT INTO vendas (total, custo_total, cliente)
+      VALUES (${total}, ${custoTotal}, ${cliente})
+      RETURNING *`;
     const venda = vRows[0];
 
     for (const r of resolved) {

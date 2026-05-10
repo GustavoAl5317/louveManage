@@ -18,6 +18,7 @@ export type Venda = {
   id: number;
   total: number;
   custo_total: number;
+  cliente: string | null;
   created_at: string;
 };
 
@@ -54,9 +55,11 @@ export async function ensureSchema() {
       id SERIAL PRIMARY KEY,
       total NUMERIC(12,2) NOT NULL,
       custo_total NUMERIC(12,2) NOT NULL DEFAULT 0,
+      cliente TEXT,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
   `;
+  await sql`ALTER TABLE vendas ADD COLUMN IF NOT EXISTS cliente TEXT`;
   await sql`
     CREATE TABLE IF NOT EXISTS venda_itens (
       id SERIAL PRIMARY KEY,

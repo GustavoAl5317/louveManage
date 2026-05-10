@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Trash2, ShoppingCart, X } from "lucide-react";
+import { Plus, Trash2, ShoppingCart, X, User } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { brl } from "@/lib/format";
 
@@ -25,6 +25,7 @@ type Venda = {
   id: number;
   total: number;
   custo_total: number;
+  cliente: string | null;
   created_at: string;
   itens: { nome: string; quantidade: number; preco_unit: number }[];
 };
@@ -33,6 +34,7 @@ export default function VendasPage() {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [vendas, setVendas] = useState<Venda[]>([]);
   const [carrinho, setCarrinho] = useState<ItemCarrinho[]>([]);
+  const [cliente, setCliente] = useState("");
   const [busca, setBusca] = useState("");
   const [drawerAberto, setDrawerAberto] = useState(false);
 
@@ -113,6 +115,7 @@ export default function VendasPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        cliente: cliente.trim() || null,
         itens: carrinho.map((c) => ({
           produto_id: c.produto_id,
           quantidade: c.quantidade,
@@ -125,6 +128,7 @@ export default function VendasPage() {
       return alert(e.error ?? "Erro");
     }
     setCarrinho([]);
+    setCliente("");
     setDrawerAberto(false);
     carregar();
   };
@@ -217,6 +221,15 @@ export default function VendasPage() {
         )}
       </div>
       <div className="border-t border-slate-100 pt-3 mt-3">
+        <label className="label flex items-center gap-1">
+          <User size={12} /> Cliente (opcional)
+        </label>
+        <input
+          className="input mb-3"
+          placeholder="Nome do cliente"
+          value={cliente}
+          onChange={(e) => setCliente(e.target.value)}
+        />
         <div className="flex items-center justify-between mb-3">
           <span className="text-sm text-slate-500">Total</span>
           <span className="text-2xl font-bold text-brand-700">{brl(total)}</span>
@@ -316,8 +329,16 @@ export default function VendasPage() {
           {vendas.map((v) => (
             <div key={v.id} className="border border-slate-200 rounded-lg p-3">
               <div className="flex justify-between items-start gap-2">
-                <div className="text-xs text-slate-500">
-                  {new Date(v.created_at).toLocaleString("pt-BR")}
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs text-slate-500">
+                    {new Date(v.created_at).toLocaleString("pt-BR")}
+                  </div>
+                  {v.cliente && (
+                    <div className="text-sm font-medium text-slate-800 flex items-center gap-1 mt-0.5">
+                      <User size={12} className="text-brand-600" />
+                      {v.cliente}
+                    </div>
+                  )}
                 </div>
                 <div className="text-right">
                   <div className="font-semibold">{brl(v.total)}</div>
@@ -344,6 +365,7 @@ export default function VendasPage() {
             <thead>
               <tr className="text-left text-xs text-slate-500 border-b border-slate-200">
                 <th className="py-2 pr-4">Data</th>
+                <th className="pr-4">Cliente</th>
                 <th className="pr-4">Itens</th>
                 <th className="pr-4 text-right">Custo</th>
                 <th className="pr-4 text-right">Lucro</th>
@@ -355,6 +377,9 @@ export default function VendasPage() {
                 <tr key={v.id} className="table-row align-top">
                   <td className="py-2 pr-4">
                     {new Date(v.created_at).toLocaleString("pt-BR")}
+                  </td>
+                  <td className="pr-4 font-medium">
+                    {v.cliente ?? <span className="text-slate-300">—</span>}
                   </td>
                   <td className="pr-4">
                     {v.itens
@@ -374,7 +399,7 @@ export default function VendasPage() {
               ))}
               {!vendas.length && (
                 <tr>
-                  <td colSpan={5} className="py-6 text-center text-slate-400">
+                  <td colSpan={6} className="py-6 text-center text-slate-400">
                     Sem vendas ainda.
                   </td>
                 </tr>

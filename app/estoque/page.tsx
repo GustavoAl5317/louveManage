@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import {
   Plus,
   Pencil,
@@ -9,6 +10,7 @@ import {
   AlertTriangle,
   Download,
   Upload,
+  ScanLine,
 } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { brl, calcPrecoVenda, pct } from "@/lib/format";
@@ -129,6 +131,14 @@ export default function EstoquePage() {
         subtitle="Gerencie seus produtos, custos e margens"
         right={
           <>
+            <Link
+              href="/nota-fiscal"
+              className="btn-ghost"
+              title="Importar produtos a partir de uma foto da nota"
+            >
+              <ScanLine size={16} />
+              <span className="hidden sm:inline">Da nota fiscal</span>
+            </Link>
             <button
               className="btn-ghost"
               onClick={exportar}
@@ -145,7 +155,7 @@ export default function EstoquePage() {
             >
               <Upload size={16} />
               <span className="hidden sm:inline">
-                {importando ? "Importando..." : "Importar"}
+                {importando ? "Importando..." : "CSV"}
               </span>
             </button>
             <input
