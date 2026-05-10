@@ -33,6 +33,19 @@ export async function POST(req: NextRequest) {
   const estoque = Number(body.estoque ?? 0);
   const estoque_minimo = Number(body.estoque_minimo ?? 0);
 
+  if (sku) {
+    const { rows: existe } = await sql`SELECT id FROM produtos WHERE sku=${sku} LIMIT 1`;
+    if (existe[0]) {
+      return NextResponse.json(
+        {
+          error: `Já existe um produto com o SKU "${sku}". Edite o produto existente em vez de criar outro.`,
+          existing_id: existe[0].id,
+        },
+        { status: 409 }
+      );
+    }
+  }
+
   const { rows } = await sql`
     INSERT INTO produtos (nome, sku, categoria, custo, margem, preco_venda, estoque, estoque_minimo)
     VALUES (${nome}, ${sku}, ${categoria}, ${custo}, ${margem}, ${preco_venda}, ${estoque}, ${estoque_minimo})

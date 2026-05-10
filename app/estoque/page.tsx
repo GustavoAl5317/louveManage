@@ -12,6 +12,7 @@ import {
   Upload,
   ScanLine,
   Wand2,
+  Copy,
 } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { brl, calcPrecoVenda, pct } from "@/lib/format";
@@ -43,6 +44,7 @@ export default function EstoquePage() {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [busca, setBusca] = useState("");
   const [editando, setEditando] = useState<any | null>(null);
+  const [salvando, setSalvando] = useState(false);
   const [importando, setImportando] = useState(false);
   const importRef = useRef<HTMLInputElement>(null);
 
@@ -117,21 +119,53 @@ export default function EstoquePage() {
   }, []);
 
   const salvar = async () => {
+    if (salvando) return;
     if (!editando.nome.trim()) return alert("Nome é obrigatório");
-    const isEdit = !!editando.id;
-    const url = isEdit ? `/api/produtos/${editando.id}` : "/api/produtos";
-    const method = isEdit ? "PUT" : "POST";
-    const r = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(editando),
-    });
-    if (!r.ok) {
-      const e = await r.json();
-      return alert(e.error ?? "Erro ao salvar");
+    setSalvando(true);
+    try {
+      const isEdit = !!editando.id;
+      const url = isEdit ? `/api/produtos/${editando.id}` : "/api/produtos";
+      const method = isEdit ? "PUT" : "POST";
+      const r = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editando),
+      });
+      if (!r.ok) {
+        const e = await r.json();
+        return alert(e.error ?? "Erro ao salvar");
+      }
+      setEditando(null);
+      carregar();
+    } finally {
+      setSalvando(false);
     }
-    setEditando(null);
-    carregar();
+  };
+
+  const verificarDuplicados = async () => {
+    const r = await fetch("/api/produtos/duplicados", { cache: "no-store" });
+    const data = await r.json();
+    if (!data.grupos || data.grupos.length === 0) {
+      alert("Nenhum produto duplicado encontrado.");
+      return;
+    }
+    const lista = data.grupos
+      .map(
+        (g: any) =>
+          `· ${g.chave} (${g.itens.length} cópias)`
+      )
+      .join("\n");
+    if (
+      confirm(
+        `Encontrei ${data.totalExtras} produto(s) duplicado(s):\n\n${lista}\n\n` +
+          `Remover as cópias mais antigas e manter só a mais recente de cada?`
+      )
+    ) {
+      const r2 = await fetch("/api/produtos/duplicados", { method: "POST" });
+      const d2 = await r2.json();
+      alert(`${d2.removidos} duplicado(s) removido(s).`);
+      carregar();
+    }
   };
 
   const remover = async (id: number) => {
@@ -163,6 +197,14 @@ export default function EstoquePage() {
               <ScanLine size={16} />
               <span className="hidden sm:inline">Da nota fiscal</span>
             </Link>
+            <button
+              className="btn-ghost"
+              onClick={verificarDuplicados}
+              title="Encontrar e remover produtos duplicados"
+            >
+              <Copy size={16} />
+              <span className="hidden md:inline">Duplicados</span>
+            </button>
             <button
               className="btn-ghost"
               onClick={recalcular}
@@ -388,6 +430,7 @@ export default function EstoquePage() {
           produto={editando}
           setProduto={setEditando}
           onSave={salvar}
+          saving={salvando}
           onClose={() => setEditando(null)}
         />
       )}
@@ -400,11 +443,13 @@ function ProdutoModal({
   setProduto,
   onSave,
   onClose,
+  saving,
 }: {
   produto: any;
   setProduto: (p: any) => void;
   onSave: () => void;
   onClose: () => void;
+  saving: boolean;
 }) {
   const set = (k: string, v: any) => setProduto({ ...produto, [k]: v });
   const setCusto = (custo: number) =>
@@ -518,11 +563,11 @@ function ProdutoModal({
           </div>
         </div>
         <div className="p-4 md:p-5 border-t border-slate-100 flex gap-2 sticky bottom-0 bg-white pb-[calc(1rem+env(safe-area-inset-bottom))]">
-          <button className="btn-ghost flex-1" onClick={onClose}>
+          <button className="btn-ghost flex-1" onClick={onClose} disabled={saving}>
             Cancelar
           </button>
-          <button className="btn-primary flex-1" onClick={onSave}>
-            Salvar
+          <button className="btn-primary flex-1" onClick={onSave} disabled={saving}>
+            {saving ? "Salvando..." : "Salvar"}
           </button>
         </div>
       </div>
