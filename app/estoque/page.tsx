@@ -111,7 +111,81 @@ export default function EstoquePage() {
         </div>
       </div>
 
-      <div className="card overflow-x-auto">
+      {/* Cards (mobile) */}
+      <div className="md:hidden space-y-3">
+        {filtrados.map((p) => {
+          const baixo = p.estoque <= p.estoque_minimo;
+          return (
+            <div key={p.id} className="card !p-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold text-sm leading-tight">
+                    {p.nome}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-0.5">
+                    {p.sku ?? "sem SKU"}
+                    {p.categoria ? ` · ${p.categoria}` : ""}
+                  </div>
+                </div>
+                <span
+                  className={`pill shrink-0 ${
+                    baixo
+                      ? "bg-red-50 text-red-600"
+                      : "bg-emerald-50 text-emerald-700"
+                  }`}
+                >
+                  {baixo && <AlertTriangle size={12} className="mr-1" />}
+                  {p.estoque} un
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 mt-3 text-xs">
+                <div>
+                  <div className="text-slate-400">Custo</div>
+                  <div className="font-medium">{brl(p.custo)}</div>
+                </div>
+                <div>
+                  <div className="text-slate-400">Margem</div>
+                  <div className="font-medium">{pct(p.margem)}</div>
+                </div>
+                <div>
+                  <div className="text-slate-400">Preço</div>
+                  <div className="font-semibold text-brand-700">
+                    {brl(p.preco_venda)}
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-2 mt-3">
+                <button
+                  className="btn-ghost flex-1"
+                  onClick={() =>
+                    setEditando({
+                      ...p,
+                      sku: p.sku ?? "",
+                      categoria: p.categoria ?? "",
+                    })
+                  }
+                >
+                  <Pencil size={14} /> Editar
+                </button>
+                <button
+                  className="btn-danger"
+                  onClick={() => remover(p.id)}
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            </div>
+          );
+        })}
+        {!filtrados.length && (
+          <div className="card text-center text-slate-400 text-sm py-8">
+            Nenhum produto encontrado.
+          </div>
+        )}
+      </div>
+
+      {/* Tabela (desktop) */}
+      <div className="card overflow-x-auto hidden md:block">
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-xs text-slate-500 border-b border-slate-200">
@@ -213,14 +287,14 @@ function ProdutoModal({
   const precoSugerido = calcPrecoVenda(Number(produto.custo), Number(produto.margem));
 
   return (
-    <div className="fixed inset-0 bg-slate-900/40 z-50 grid place-items-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl">
-        <div className="p-5 border-b border-slate-100">
+    <div className="fixed inset-0 bg-slate-900/40 z-50 flex items-end md:items-center md:justify-center md:p-4">
+      <div className="bg-white rounded-t-2xl md:rounded-2xl shadow-xl w-full md:max-w-2xl max-h-[92vh] overflow-y-auto">
+        <div className="p-4 md:p-5 border-b border-slate-100 sticky top-0 bg-white">
           <h2 className="font-bold text-lg">
             {produto.id ? "Editar produto" : "Novo produto"}
           </h2>
         </div>
-        <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="p-4 md:p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
             <label className="label">Nome *</label>
             <input
@@ -306,11 +380,11 @@ function ProdutoModal({
             />
           </div>
         </div>
-        <div className="p-5 border-t border-slate-100 flex justify-end gap-2">
-          <button className="btn-ghost" onClick={onClose}>
+        <div className="p-4 md:p-5 border-t border-slate-100 flex gap-2 sticky bottom-0 bg-white pb-[calc(1rem+env(safe-area-inset-bottom))]">
+          <button className="btn-ghost flex-1" onClick={onClose}>
             Cancelar
           </button>
-          <button className="btn-primary" onClick={onSave}>
+          <button className="btn-primary flex-1" onClick={onSave}>
             Salvar
           </button>
         </div>

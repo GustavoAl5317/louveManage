@@ -52,14 +52,22 @@ function Stat({
     red: "bg-red-50 text-red-700",
   };
   return (
-    <div className="card flex items-center gap-4">
-      <div className={`w-12 h-12 rounded-xl grid place-items-center ${colors[color]}`}>
-        <Icon size={22} />
+    <div className="card flex items-center gap-3 md:gap-4 !p-3 md:!p-5">
+      <div
+        className={`w-10 h-10 md:w-12 md:h-12 rounded-xl grid place-items-center shrink-0 ${colors[color]}`}
+      >
+        <Icon size={20} />
       </div>
-      <div>
-        <div className="text-xs text-slate-500">{label}</div>
-        <div className="text-xl font-bold text-slate-900">{value}</div>
-        {hint && <div className="text-xs text-slate-400">{hint}</div>}
+      <div className="min-w-0">
+        <div className="text-[11px] md:text-xs text-slate-500 truncate">{label}</div>
+        <div className="text-base md:text-xl font-bold text-slate-900 truncate">
+          {value}
+        </div>
+        {hint && (
+          <div className="text-[10px] md:text-xs text-slate-400 truncate">
+            {hint}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -81,7 +89,7 @@ export default function DashboardPage() {
         subtitle="Visão geral da sua loja"
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
         <Stat
           icon={TrendingUp}
           color="green"
@@ -112,7 +120,7 @@ export default function DashboardPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         <div className="card lg:col-span-2">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold">Vendas dos últimos 7 dias</h2>

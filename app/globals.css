@@ -10,14 +10,15 @@ html, body {
   height: 100%;
   background: #f7f8fb;
   color: #0f172a;
+  -webkit-tap-highlight-color: transparent;
 }
 
 @layer components {
   .card {
-    @apply bg-white rounded-2xl shadow-sm border border-slate-200 p-5;
+    @apply bg-white rounded-2xl shadow-sm border border-slate-200 p-4 md:p-5;
   }
   .btn {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition active:scale-[0.98] text-sm;
   }
   .btn-primary {
     @apply btn bg-brand-600 text-white hover:bg-brand-700;
@@ -29,7 +30,7 @@ html, body {
     @apply btn bg-red-50 text-red-600 hover:bg-red-100;
   }
   .input {
-    @apply w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500;
+    @apply w-full rounded-lg border border-slate-300 px-3 py-2.5 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500;
   }
   .label {
     @apply block text-xs font-medium text-slate-600 mb-1;
@@ -39,5 +40,12 @@ html, body {
   }
   .pill {
     @apply inline-flex items-center text-xs px-2 py-0.5 rounded-full;
+  }
+}
+
+/* iOS: evita zoom em inputs (font >= 16px) */
+@media (max-width: 767px) {
+  input, select, textarea {
+    font-size: 16px !important;
   }
 }

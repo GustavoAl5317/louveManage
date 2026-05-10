@@ -258,19 +258,19 @@ export default function NotaFiscalPage() {
         </div>
 
         <div className="card lg:col-span-2">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
             <h2 className="font-semibold">Produtos identificados</h2>
             <div className="flex gap-2">
-              <button className="btn-ghost" onClick={adicionarLinha}>
-                <Plus size={16} /> Adicionar linha
+              <button className="btn-ghost flex-1 sm:flex-none" onClick={adicionarLinha}>
+                <Plus size={16} /> Adicionar
               </button>
               <button
-                className="btn-primary"
+                className="btn-primary flex-1 sm:flex-none"
                 disabled={!produtos.length || salvando}
                 onClick={importar}
               >
                 <Check size={16} />
-                {salvando ? "Importando..." : "Importar para estoque"}
+                {salvando ? "Importando..." : "Importar"}
               </button>
             </div>
           </div>
@@ -280,8 +280,112 @@ export default function NotaFiscalPage() {
               Envie uma foto para começar.
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+            <>
+              {/* Cards (mobile) */}
+              <div className="md:hidden space-y-3">
+                {produtos.map((p, i) => (
+                  <div
+                    key={i}
+                    className={`border rounded-xl p-3 ${
+                      p.importar
+                        ? "border-brand-200 bg-brand-50/30"
+                        : "border-slate-200 opacity-60"
+                    }`}
+                  >
+                    <div className="flex items-start gap-2 mb-2">
+                      <input
+                        type="checkbox"
+                        className="mt-1 w-5 h-5"
+                        checked={p.importar}
+                        onChange={(e) =>
+                          update(i, { importar: e.target.checked })
+                        }
+                      />
+                      <input
+                        className="input py-1.5 flex-1 font-medium"
+                        value={p.nome}
+                        onChange={(e) => update(i, { nome: e.target.value })}
+                      />
+                      <button
+                        className="text-red-500 hover:bg-red-50 p-2 rounded shrink-0"
+                        onClick={() => remover(i)}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="label">SKU</label>
+                        <input
+                          className="input py-1.5"
+                          value={p.sku ?? ""}
+                          onChange={(e) => update(i, { sku: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <label className="label">Quantidade</label>
+                        <input
+                          type="number"
+                          className="input py-1.5"
+                          value={p.quantidade}
+                          onChange={(e) =>
+                            update(i, { quantidade: Number(e.target.value) })
+                          }
+                        />
+                      </div>
+                      <div>
+                        <label className="label">Custo un.</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          className="input py-1.5"
+                          value={p.custo_unit}
+                          onChange={(e) =>
+                            update(i, { custo_unit: Number(e.target.value) })
+                          }
+                        />
+                      </div>
+                      <div>
+                        <label className="label">Margem %</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          className="input py-1.5"
+                          value={p.margem}
+                          onChange={(e) =>
+                            update(i, { margem: Number(e.target.value) })
+                          }
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <label className="label">Preço de venda</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          className="input py-1.5 font-semibold text-brand-700"
+                          value={p.preco_venda}
+                          onChange={(e) =>
+                            update(i, { preco_venda: Number(e.target.value) })
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <div className="text-right text-sm font-semibold text-brand-700 pt-2">
+                  Total venda:{" "}
+                  {brl(
+                    produtos.reduce(
+                      (s, p) => s + p.preco_venda * p.quantidade,
+                      0
+                    )
+                  )}
+                </div>
+              </div>
+
+              {/* Tabela (desktop) */}
+              <div className="overflow-x-auto hidden md:block">
+                <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-xs text-slate-500 border-b border-slate-200">
                     <th className="py-2 px-2">
@@ -411,7 +515,8 @@ export default function NotaFiscalPage() {
                   </tr>
                 </tfoot>
               </table>
-            </div>
+              </div>
+            </>
           )}
         </div>
       </div>
