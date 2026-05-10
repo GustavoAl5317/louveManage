@@ -92,7 +92,7 @@ export default function EstoquePage() {
   };
 
   const carregar = async () => {
-    const r = await fetch("/api/produtos", { cache: "no-store" });
+    const r = await fetch(`/api/produtos?_=${Date.now()}`, { cache: "no-store" });
     const data = await r.json();
     setProdutos(data.map((p: any) => ({
       ...p,
@@ -104,6 +104,16 @@ export default function EstoquePage() {
 
   useEffect(() => {
     carregar();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") carregar();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", carregar);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", carregar);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const salvar = async () => {

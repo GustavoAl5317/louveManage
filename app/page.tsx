@@ -143,7 +143,9 @@ export default function DashboardPage() {
   const carregar = useCallback(async () => {
     setCarregando(true);
     try {
-      const r = await fetch("/api/dashboard", { cache: "no-store" });
+      const r = await fetch(`/api/dashboard?_=${Date.now()}`, {
+        cache: "no-store",
+      });
       const d = await r.json();
       setData(d);
       setAtualizadoEm(new Date());
@@ -154,6 +156,8 @@ export default function DashboardPage() {
 
   useEffect(() => {
     carregar();
+    const id = setInterval(carregar, 15000);
+    return () => clearInterval(id);
   }, [carregar]);
 
   useEffect(() => {
@@ -172,17 +176,16 @@ export default function DashboardPage() {
     <>
       <PageHeader
         title="Dashboard"
-        subtitle="Visão geral da sua loja"
+        subtitle={
+          atualizadoEm
+            ? `Atualizado às ${atualizadoEm.toLocaleTimeString("pt-BR")} · auto a cada 15s`
+            : "Visão geral da sua loja"
+        }
         right={
           <button
             className="btn-ghost"
             onClick={carregar}
             disabled={carregando}
-            title={
-              atualizadoEm
-                ? `Atualizado às ${atualizadoEm.toLocaleTimeString("pt-BR")}`
-                : "Atualizar"
-            }
           >
             <RefreshCw
               size={16}

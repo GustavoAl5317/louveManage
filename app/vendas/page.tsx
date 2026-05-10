@@ -39,9 +39,10 @@ export default function VendasPage() {
   const [drawerAberto, setDrawerAberto] = useState(false);
 
   const carregar = async () => {
+    const t = Date.now();
     const [pr, vr] = await Promise.all([
-      fetch("/api/produtos", { cache: "no-store" }).then((r) => r.json()),
-      fetch("/api/vendas", { cache: "no-store" }).then((r) => r.json()),
+      fetch(`/api/produtos?_=${t}`, { cache: "no-store" }).then((r) => r.json()),
+      fetch(`/api/vendas?_=${t}`, { cache: "no-store" }).then((r) => r.json()),
     ]);
     setProdutos(
       pr.map((p: any) => ({
