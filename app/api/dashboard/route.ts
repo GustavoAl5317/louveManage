@@ -102,45 +102,48 @@ export async function GET() {
        LIMIT 5`
   ).rows;
 
-  return NextResponse.json({
-    totalProdutos,
-    produtosComEstoque,
-    semEstoque,
-    baixoEstoque,
-    totalCategorias,
-    valorEstoque,
-    estoque: {
-      unidades: estoqueRow.unidades,
-      custo: estoqueCusto,
-      receita: estoqueReceita,
-      lucro: estoqueLucro,
-      margem: estoqueMargem,
-      margemMedia: Number(estoqueRow.margem_media),
-      precoMin: Number(estoqueRow.preco_min),
-      precoMax: Number(estoqueRow.preco_max),
+  return NextResponse.json(
+    {
+      totalProdutos,
+      produtosComEstoque,
+      semEstoque,
+      baixoEstoque,
+      totalCategorias,
+      valorEstoque,
+      estoque: {
+        unidades: estoqueRow.unidades,
+        custo: estoqueCusto,
+        receita: estoqueReceita,
+        lucro: estoqueLucro,
+        margem: estoqueMargem,
+        margemMedia: Number(estoqueRow.margem_media),
+        precoMin: Number(estoqueRow.preco_min),
+        precoMax: Number(estoqueRow.preco_max),
+      },
+      porCategoria,
+      geral: {
+        vendas: totalVendas.c,
+        receita: Number(totalVendas.v),
+        lucro: Number(totalVendas.l),
+      },
+      hoje: { v: Number(hojeRow.v), n: hojeRow.n },
+      mes: {
+        v: Number(mesRow.v),
+        l: Number(mesRow.l),
+        n: mesRow.n,
+        ticket: Number(mesRow.ticket),
+      },
+      ultimos7: ultimos7.map((r: any) => ({
+        dia: r.dia,
+        total: Number(r.total),
+        lucro: Number(r.lucro),
+      })),
+      topProdutos: topProdutos.map((r: any) => ({
+        nome: r.nome,
+        qtd: r.qtd,
+        total: Number(r.total),
+      })),
     },
-    porCategoria,
-    geral: {
-      vendas: totalVendas.c,
-      receita: Number(totalVendas.v),
-      lucro: Number(totalVendas.l),
-    },
-    hoje: { v: Number(hojeRow.v), n: hojeRow.n },
-    mes: {
-      v: Number(mesRow.v),
-      l: Number(mesRow.l),
-      n: mesRow.n,
-      ticket: Number(mesRow.ticket),
-    },
-    ultimos7: ultimos7.map((r: any) => ({
-      dia: r.dia,
-      total: Number(r.total),
-      lucro: Number(r.lucro),
-    })),
-    topProdutos: topProdutos.map((r: any) => ({
-      nome: r.nome,
-      qtd: r.qtd,
-      total: Number(r.total),
-    })),
-  });
+    { headers: { "Cache-Control": "no-store, max-age=0" } }
+  );
 }

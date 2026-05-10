@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -25,6 +25,7 @@ import {
   Boxes,
   PackageX,
   Receipt,
+  RefreshCw,
 } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { brl, pct } from "@/lib/format";
@@ -136,16 +137,63 @@ function MiniStat({
 
 export default function DashboardPage() {
   const [data, setData] = useState<Dashboard | null>(null);
+  const [carregando, setCarregando] = useState(false);
+  const [atualizadoEm, setAtualizadoEm] = useState<Date | null>(null);
+
+  const carregar = useCallback(async () => {
+    setCarregando(true);
+    try {
+      const r = await fetch("/api/dashboard", { cache: "no-store" });
+      const d = await r.json();
+      setData(d);
+      setAtualizadoEm(new Date());
+    } finally {
+      setCarregando(false);
+    }
+  }, []);
 
   useEffect(() => {
-    fetch("/api/dashboard")
-      .then((r) => r.json())
-      .then(setData);
-  }, []);
+    carregar();
+  }, [carregar]);
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") carregar();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", carregar);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", carregar);
+    };
+  }, [carregar]);
 
   return (
     <>
-      <PageHeader title="Dashboard" subtitle="Visão geral da sua loja" />
+      <PageHeader
+        title="Dashboard"
+        subtitle="Visão geral da sua loja"
+        right={
+          <button
+            className="btn-ghost"
+            onClick={carregar}
+            disabled={carregando}
+            title={
+              atualizadoEm
+                ? `Atualizado às ${atualizadoEm.toLocaleTimeString("pt-BR")}`
+                : "Atualizar"
+            }
+          >
+            <RefreshCw
+              size={16}
+              className={carregando ? "animate-spin" : ""}
+            />
+            <span className="hidden sm:inline">
+              {carregando ? "Atualizando..." : "Atualizar"}
+            </span>
+          </button>
+        }
+      />
 
       {/* Vendas */}
       <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 mt-2">

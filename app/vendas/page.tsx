@@ -40,8 +40,8 @@ export default function VendasPage() {
 
   const carregar = async () => {
     const [pr, vr] = await Promise.all([
-      fetch("/api/produtos").then((r) => r.json()),
-      fetch("/api/vendas").then((r) => r.json()),
+      fetch("/api/produtos", { cache: "no-store" }).then((r) => r.json()),
+      fetch("/api/vendas", { cache: "no-store" }).then((r) => r.json()),
     ]);
     setProdutos(
       pr.map((p: any) => ({

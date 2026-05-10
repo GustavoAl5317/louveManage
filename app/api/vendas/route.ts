@@ -13,7 +13,9 @@ export async function GET() {
     ...v,
     itens: itens.filter((i) => i.venda_id === v.id),
   }));
-  return NextResponse.json(grouped);
+  return NextResponse.json(grouped, {
+    headers: { "Cache-Control": "no-store, max-age=0" },
+  });
 }
 
 type ItemInput = { produto_id: number; quantidade: number; preco_unit?: number };

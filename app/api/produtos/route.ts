@@ -8,7 +8,9 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   await ensureSchema();
   const { rows } = await sql`SELECT * FROM produtos ORDER BY LOWER(nome)`;
-  return NextResponse.json(rows);
+  return NextResponse.json(rows, {
+    headers: { "Cache-Control": "no-store, max-age=0" },
+  });
 }
 
 export async function POST(req: NextRequest) {

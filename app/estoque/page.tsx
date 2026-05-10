@@ -78,7 +78,7 @@ export default function EstoquePage() {
   };
 
   const carregar = async () => {
-    const r = await fetch("/api/produtos");
+    const r = await fetch("/api/produtos", { cache: "no-store" });
     const data = await r.json();
     setProdutos(data.map((p: any) => ({
       ...p,
