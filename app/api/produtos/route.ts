@@ -22,11 +22,14 @@ export async function POST(req: NextRequest) {
   const sku = body.sku ?? null;
   const categoria = body.categoria ?? null;
   const custo = Number(body.custo ?? 0);
-  const margem = Number(body.margem ?? 0);
-  const preco_venda =
+  let margem = Number(body.margem ?? 0);
+  let preco_venda =
     body.preco_venda != null && Number(body.preco_venda) > 0
       ? Number(body.preco_venda)
       : calcPrecoVenda(custo, margem);
+  if (custo > 0) {
+    margem = Number((((preco_venda - custo) / custo) * 100).toFixed(2));
+  }
   const estoque = Number(body.estoque ?? 0);
   const estoque_minimo = Number(body.estoque_minimo ?? 0);
 

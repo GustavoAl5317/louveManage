@@ -336,12 +336,12 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {data && (
+        {data && data.estoque.unidades > 0 && (
           <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-slate-100">
             <div>
-              <div className="text-[11px] text-slate-500">Margem média</div>
+              <div className="text-[11px] text-slate-500">Custo médio/un.</div>
               <div className="text-sm font-semibold">
-                {pct(data.estoque.margemMedia)}
+                {brl(data.estoque.custo / data.estoque.unidades)}
               </div>
             </div>
             <div>

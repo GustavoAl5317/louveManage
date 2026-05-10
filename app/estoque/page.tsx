@@ -11,6 +11,7 @@ import {
   Download,
   Upload,
   ScanLine,
+  Wand2,
 } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { brl, calcPrecoVenda, pct } from "@/lib/format";
@@ -47,6 +48,19 @@ export default function EstoquePage() {
 
   const exportar = () => {
     window.location.href = "/api/produtos/export";
+  };
+
+  const recalcular = async () => {
+    if (
+      !confirm(
+        "Recalcular o preço de venda de todos os produtos com base no custo × (1 + margem%)? Útil quando o preço, custo ou margem ficou incoerente."
+      )
+    )
+      return;
+    const r = await fetch("/api/produtos/recalcular", { method: "POST" });
+    const data = await r.json();
+    alert(`${data.atualizados} produto(s) recalculado(s).`);
+    carregar();
   };
 
   const importar = async (file: File) => {
@@ -139,6 +153,14 @@ export default function EstoquePage() {
               <ScanLine size={16} />
               <span className="hidden sm:inline">Da nota fiscal</span>
             </Link>
+            <button
+              className="btn-ghost"
+              onClick={recalcular}
+              title="Recalcular preço de venda = custo × (1 + margem%)"
+            >
+              <Wand2 size={16} />
+              <span className="hidden md:inline">Recalcular preços</span>
+            </button>
             <button
               className="btn-ghost"
               onClick={exportar}
@@ -375,6 +397,27 @@ function ProdutoModal({
   onClose: () => void;
 }) {
   const set = (k: string, v: any) => setProduto({ ...produto, [k]: v });
+  const setCusto = (custo: number) =>
+    setProduto({
+      ...produto,
+      custo,
+      preco_venda: calcPrecoVenda(custo, Number(produto.margem)),
+    });
+  const setMargem = (margem: number) =>
+    setProduto({
+      ...produto,
+      margem,
+      preco_venda: calcPrecoVenda(Number(produto.custo), margem),
+    });
+  const setPreco = (preco_venda: number) => {
+    const custo = Number(produto.custo);
+    const margem = custo > 0 ? ((preco_venda - custo) / custo) * 100 : 0;
+    setProduto({
+      ...produto,
+      preco_venda,
+      margem: Number(margem.toFixed(2)),
+    });
+  };
   const precoSugerido = calcPrecoVenda(Number(produto.custo), Number(produto.margem));
 
   return (
@@ -417,7 +460,7 @@ function ProdutoModal({
               step="0.01"
               className="input"
               value={produto.custo}
-              onChange={(e) => set("custo", Number(e.target.value))}
+              onChange={(e) => setCusto(Number(e.target.value))}
             />
           </div>
           <div>
@@ -427,14 +470,7 @@ function ProdutoModal({
               step="0.01"
               className="input"
               value={produto.margem}
-              onChange={(e) => {
-                const margem = Number(e.target.value);
-                setProduto({
-                  ...produto,
-                  margem,
-                  preco_venda: calcPrecoVenda(Number(produto.custo), margem),
-                });
-              }}
+              onChange={(e) => setMargem(Number(e.target.value))}
             />
           </div>
           <div>
@@ -449,7 +485,7 @@ function ProdutoModal({
               step="0.01"
               className="input"
               value={produto.preco_venda}
-              onChange={(e) => set("preco_venda", Number(e.target.value))}
+              onChange={(e) => setPreco(Number(e.target.value))}
             />
           </div>
           <div>

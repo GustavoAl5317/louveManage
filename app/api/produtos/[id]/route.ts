@@ -16,11 +16,14 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   const sku = body.sku ?? existing.sku;
   const categoria = body.categoria ?? existing.categoria;
   const custo = Number(body.custo ?? existing.custo);
-  const margem = Number(body.margem ?? existing.margem);
-  const preco_venda =
+  let margem = Number(body.margem ?? existing.margem);
+  let preco_venda =
     body.preco_venda != null && Number(body.preco_venda) > 0
       ? Number(body.preco_venda)
       : calcPrecoVenda(custo, margem);
+  if (custo > 0) {
+    margem = Number((((preco_venda - custo) / custo) * 100).toFixed(2));
+  }
   const estoque = Number(body.estoque ?? existing.estoque);
   const estoque_minimo = Number(body.estoque_minimo ?? existing.estoque_minimo);
 
